@@ -1,0 +1,62 @@
+{
+    "name": "streeboga/laravel-api",
+    "description": "Base abstractions for JSON:API Laravel projects — layered architecture (Controller→Service→Repository→QueryBuilder), strict typing, Spatie Data DTOs, prefix-ULID routing.",
+    "license": "MIT",
+    "type": "library",
+    "require": {
+        "php": "^8.3",
+        "laravel/framework": "^13.0",
+        "timacdonald/json-api": "^1.0.0-beta",
+        "spatie/laravel-query-builder": "^7.1",
+        "spatie/laravel-data": "^4.21",
+        "brick/money": "^0.11",
+        "laravel/sanctum": "^4.0",
+        "dedoc/scramble": "^0.13"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^11.0",
+        "pestphp/pest": "^4.4",
+        "pestphp/pest-plugin-laravel": "^4.1",
+        "phpstan/phpstan": "^2.0",
+        "larastan/larastan": "^3.9",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "laravel/pint": "^1.27"
+    },
+    "autoload": {
+        "psr-4": {
+            "Streeboga\\LaravelApi\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Streeboga\\LaravelApi\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": ["Streeboga\\LaravelApi\\LaravelApiServiceProvider"]
+        },
+        "streeboga": {
+            "skills": {
+                "laravel-api": {
+                    "path": ".claude-skills/laravel-api",
+                    "version": "1.0.0"
+                }
+            }
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "stan": "phpstan analyse",
+        "format": "pint"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true,
+            "pestphp/pest-plugin-laravel": true
+        }
+    }
+}

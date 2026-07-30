@@ -6,6 +6,7 @@ namespace Streeboga\LaravelApi\Tests;
 
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as Orchestra;
+use Spatie\Activitylog\ActivitylogServiceProvider;
 use Streeboga\LaravelApi\LaravelApiServiceProvider;
 
 abstract class TestCase extends Orchestra
@@ -16,7 +17,7 @@ abstract class TestCase extends Orchestra
      */
     protected function getPackageProviders($app): array
     {
-        return [LaravelApiServiceProvider::class];
+        return [ActivitylogServiceProvider::class, LaravelApiServiceProvider::class];
     }
 
     /**
@@ -34,6 +35,12 @@ abstract class TestCase extends Orchestra
 
     protected function defineDatabaseMigrations(): void
     {
+        // Таблица activity_log нужна фикстуре, которая упражняет
+        // LogsAuditActivity. Миграция пакета spatie лежит .stub-ом, поэтому
+        // применяем её напрямую, а не через loadMigrationsFrom.
+        $activityLog = require __DIR__.'/../vendor/spatie/laravel-activitylog/database/migrations/create_activity_log_table.php.stub';
+        $activityLog->up();
+
         $this->loadMigrationsFrom(__DIR__.'/Fixtures/migrations');
     }
 }

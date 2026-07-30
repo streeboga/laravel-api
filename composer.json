@@ -11,7 +11,8 @@
         "spatie/laravel-data": "^4.21",
         "brick/money": "^0.11",
         "laravel/sanctum": "^4.0",
-        "dedoc/scramble": "^0.13"
+        "dedoc/scramble": "^0.13",
+        "spatie/laravel-activitylog": "^5.0"
     },
     "require-dev": {
         "orchestra/testbench": "^11.0",
@@ -34,7 +35,9 @@
     },
     "extra": {
         "laravel": {
-            "providers": ["Streeboga\\LaravelApi\\LaravelApiServiceProvider"]
+            "providers": [
+                "Streeboga\\LaravelApi\\LaravelApiServiceProvider"
+            ]
         },
         "streeboga": {
             "skills": {

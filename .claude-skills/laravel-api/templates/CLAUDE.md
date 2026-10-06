@@ -71,7 +71,7 @@ Controller → Service → Repository → QueryBuilder → Model → DB
 Триггеры: "ревью", "проверь код", "review"
 
 1. ПРОЧИТАЙ `references/code-review.md`
-2. Пройди ВСЕ 13 секций. Не пропускай.
+2. Пройди ВСЕ 14 секций. Не пропускай.
 3. Для каждого нарушения — прочитай reference того слоя и исправь.
 4. Выдай отчёт с оценкой.
 
@@ -83,6 +83,14 @@ Controller → Service → Repository → QueryBuilder → Model → DB
 2. Покрой ВСЕ 25 edge cases (где применимо)
 3. `covers()` или `mutates()` в каждом тест-файле
 4. `XDEBUG_MODE=coverage ./vendor/bin/pest --coverage --min=85`
+
+### Фаза: Безопасность
+
+Триггеры: исходящий HTTP/вебхук/callback, `base_url`, секрет, токен, деньги/баланс, регистрация, публичный ресурс, загрузка файла
+
+1. ПРОЧИТАЙ `references/security.md` — раздел «Правила по результатам аудита»
+2. Сверься с таблицей «Границы доверия по слоям» в `references/architecture.md`
+3. На каждую затронутую границу добавь регрессионный тест
 
 ### Фаза: Качество / Pre-commit
 
@@ -115,6 +123,20 @@ Controller → Service → Repository → QueryBuilder → Model → DB
 - `$guarded = []`
 - Бизнес-логика в Controller
 - DB-запросы в Controller или Service
+
+## Безопасность (нарушение = баг)
+
+- Исходящий HTTP на адрес из данных пользователя — только через `OutboundUrlGuard`: https, A+AAAA, непубличные IP запрещены (в т.ч. `::ffff:`, CGNAT, `169.254`), IP закреплён `CURLOPT_RESOLVE`, `withoutRedirecting()`, проверка при каждой отправке, тело ответа не сохраняется
+- `{path}` и сегменты от пользователя проверяются на `? # .. \` и закодированные формы; чужому серверу не пересылаются `X-Forwarded-*`, `X-Real-IP`, `Forwarded`
+- Секрет: `hash_equals`, пустой секрет = отказ, только заголовок (не query), boot guard в production на пустой/dev/короткий
+- Входящий вебхук: подпись + timestamp + обязательные сумма и валюта; исходящий callback подписывается
+- `Rule::exists(...)->where(владелец)` вместо голого `exists`; пустой фильтр = пустой результат, не «без фильтра»
+- Статусы площадки (`BLOCKED`, `PENDING`) владелец не меняет; одноразовые операции — атомарный `UPDATE ... WHERE ... IS NULL`; баланс — резерв, не check-then-act
+- Ключ идемпотентности включает владельца; данные контрагента (usage, цена) ограничены потолком
+- Смена почты/пароля — `current_password` и отзыв токенов; регистрация с `throttle` и нормализацией почты; каждый маршрут с `abilities:`
+- Resource — белый список полей; секреты `encrypted` + `$hidden`; клиенту не отдаётся `$e->getMessage()`; в логах нет `Authorization` и тел
+- `max:` на строках, массивах и `per_page`; у джоб `timeout/tries/backoff`; `withoutOverlapping` в минутах
+- Тестовые маршруты и коннекторы выключены в production и не регистрируются; `.env` — `640`
 
 ## Зависимости
 

@@ -86,6 +86,23 @@ app/
     └── {Entity}Created.php
 ```
 
+## Границы доверия по слоям (безопасность)
+
+Проверка живёт в одном месте — на последнем доверенном решении. Дублировать в каждом вызове нельзя: забытый вызов и есть дыра.
+
+| Слой | Что обязан обеспечить | Типичный дефект |
+|------|----------------------|-----------------|
+| FormRequest | границы (`max:`), схема URL, `Rule::exists(...)->where(владелец)`, `current_password` при смене почты/пароля, `authorize()` | `exists:apis,id` без владельца; массив без `max` |
+| Middleware | `abilities:`, `throttle`, подпись и секрет (`hash_equals`, пустой = отказ), `licenses`-флаг | маршрут без `abilities`; секрет в query |
+| Controller | только вызов сервиса; параметры маршрута считаются недоверенными (`{path}`) | `?`/`..` в `{path}` |
+| Service | переходы статусов, права владельца, резерв и идемпотентность, исходящий HTTP только через `OutboundUrlGuard` | владелец снимает `BLOCKED`; check-then-act по балансу |
+| Repository/QueryBuilder | tenant-ограничение, общий constraint (`ACTIVE`, `is_public`, продавец не `BLOCKED`), атомарный `UPDATE ... WHERE` | пустой список фильтров снимает границу |
+| Resource | белый список полей, секреты и credentials не отдаются | `default_headers` продавца в публичной карточке |
+| Model | `$fillable`, `$hidden`, `encrypted` cast; без `$guarded = []` | `secret_key` без `$hidden` |
+| ServiceProvider | boot guard: пустой/dev-секрет, `fake`-адаптер и тестовые коннекторы в production | тестовый путь доступен в production |
+
+Исходящий HTTP — отдельный компонент `app/Support/OutboundUrlGuard.php`, а не `Http::post($url)` в сервисе. Правила — `references/security.md`, раздел «Правила по результатам аудита».
+
 ## Repository Service Provider
 
 ```php

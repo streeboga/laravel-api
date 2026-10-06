@@ -156,6 +156,8 @@ Read the appropriate reference file **before** writing any code for that layer:
 | Setting up models/migrations | `references/models.md` |
 | Working with API responses | `references/api-resources.md` |
 | Auth, authorization, security | `references/security.md` |
+| ANY change touching a trust boundary (new route/entity, owner or status fields, money, tokens, webhooks, outbound HTTP, cache/queue/search copies, deletion) — BEFORE writing code | `references/secure-design.md` |
+| Security audit of existing code or a diff | `references/secure-design.md` (phase «Аудит безопасности») |
 | Writing tests | `references/testing.md` |
 | Swappable components (payments, SMS, etc.) | `references/patterns.md` |
 | Working with money/prices | `references/money.md` |
@@ -200,6 +202,8 @@ Read the appropriate reference file **before** writing any code for that layer:
 - `covers()` or `mutates()` in test files for mutation score tracking
 - `Model::preventLazyLoading()` in AppServiceProvider
 - Policies for authorization of every entity
+- Write the trust-boundary invariants (who / what is sent / control / boundary / resource / test) BEFORE code for any boundary-touching change — `references/secure-design.md`
+- One regression test per invariant, with two dummy tenants and the sad-path values
 - Security headers middleware on all responses
 
 ### MUST NOT DO
@@ -214,6 +218,10 @@ Read the appropriate reference file **before** writing any code for that layer:
 - Log PII (emails, tokens, passwords)
 - Use `APP_DEBUG=true` in production
 - Use wildcard CORS origins for authenticated routes
+- Call a user-supplied URL with a bare `Http::` — only through `OutboundUrlGuard`
+- Use bare `exists:table,id` for an owned resource — bind it to the owner
+- Put `status`, `role`, owner ids, commission or balance into `$fillable` reachable from a request
+- Check-then-act on balance, limits or one-time actions — reserve or atomic `UPDATE ... WHERE`
 
 ## Quick Reference: New Entity Checklist
 
@@ -232,7 +240,7 @@ When creating a new entity `{Entity}`:
 11. **JsonApiResource** — extends `TiMacDonald\JsonApi\JsonApiResource`, `toId()` returns `key`, `toType()`, `toAttributes()`, `toRelationships()`, `toLinks()` with `Link::self()`
 12. **Routes** — versioned under `api/v1/`, PATCH for updates (not PUT), `json-api` middleware
 13. **Service Provider** — bind interface → implementation
-14. **Tests** — feature tests extending `ApiTestCase`
+14. **Tests** — feature tests extending `ApiTestCase`, including one test per trust-boundary invariant (`references/secure-design.md`)
 
 ## Anti-Patterns (key ones — full list in `references/code-review.md`)
 
